@@ -4,8 +4,8 @@
   "description": "See if a movie is available on Internet Archive and play it instantly, directly from Stremio.",
   "keywords": [
     "stremio",
-    "internet",
-    "archive",
+    "internet-archive",
+    "archive-org",
     "movie",
     "movies",
     "streaming"
