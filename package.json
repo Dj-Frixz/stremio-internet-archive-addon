@@ -1,6 +1,6 @@
 {
   "name": "stremio-internet-archive-addon",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "See if a movie is available on Internet Archive and play it instantly, directly from Stremio.",
   "keywords": [
     "stremio",
@@ -23,7 +23,8 @@
   "type": "commonjs",
   "main": "addon.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm start -- --launch",
+    "update": "git pull && git commit . && git push && beamup"
   },
   "dependencies": {
     "stremio-addon-sdk": "1.0.x"

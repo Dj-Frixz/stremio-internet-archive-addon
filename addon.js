@@ -2,7 +2,7 @@ const { addonBuilder }  = require('stremio-addon-sdk');
 
 const builder = new addonBuilder({
     id: 'org.stremio.internet-archive',
-    version: '1.0.1',
+    version: '1.0.2',
     name: 'Internet Archive',
     description: 'See if a movie is available on Internet Archive and play it instantly, directly from Stremio.',
     catalogs: [], // { type: 'movie', id: 'ia', name: 'Internet Archive' }
@@ -27,6 +27,7 @@ async function fetchStreams(id) {
     if (!film) {
         return { streams: [] };
     }
+    const runtime = parseInt(film.runtime.slice(0,-4)) * 60; // typical runtime (in seconds)
     const director_surname = (film.director?.[0] || '').split(' ').slice(-1)[0];
     const year = film.year * 1; // cast to int
     const queryParts = [
@@ -46,20 +47,24 @@ async function fetchStreams(id) {
     console.log(`Found ${results.length} results on IA for ${film.name} (${imdbId})`);
     let streams = [];
     let counter = 0;
-    for (const film of results) {
-        const id = film.fields.identifier;
+    for (const res of results) {
+        const id = res.fields.identifier;
         const metaResponse = await fetch(`https://archive.org/metadata/${id}/files`);
         const files = (await metaResponse.json())?.result || [];
         const subtitles = files
-        .filter(f => ACCEPTED_SUBTITLES.includes(f.name.slice(-3).toLowerCase()))
-        .map(f => ({id: f.name, url: `https://archive.org/download/${id}/${f.name}`, lang:'en'})); // lang en by default
+            .filter(f => ACCEPTED_SUBTITLES.includes(f.name.slice(-3).toLowerCase()) && f.length < runtime*0.7)  // skip if it is too short and likely not the full movie
+            .map(f => ({id: f.name, url: `https://archive.org/download/${id}/${f.name}`, lang:'en'})); // lang en by default
+        const videoFiles = files.filter(f => ACCEPTED_FILE_TYPES.includes(f.name.slice(-3).toLowerCase()));
+        if (videoFiles.length === 0) {
+            console.log(` - ${id} has no acceptable video files, skipping`);
+            continue;
+        }
+        const quality = (res.fields.title+videoFiles[0].name+(res.fields.description||'')).match(/(?:dvd|blu-?ray|bd|hd|web|nd-?rip)-?(?:rip|dl)?|remux/i)?.[0] || '';
         streams = streams.concat( // video files
-            files
-            .filter(f => ACCEPTED_FILE_TYPES.includes(f.name.slice(-3).toLowerCase()))
-            .map(f => ({
+            videoFiles.map(f => ({
                 url: `https://archive.org/download/${id}/${f.name}`,
-                name: `IA ${f.width}p ${f.format}`,
-                description: `${film.fields.title}\n${f.name}\n🎬 ${f.name.slice(-3).toLowerCase()} ${f.source}\n🕥 ${(f.length/60).toFixed(0)} min   💾 ${sizeToString(f.size)}`,
+                name: `Archive.org ${quality} ${f.height}p ${f.format}`,
+                description: `${res.fields.title}\n${f.name}\n🎬 ${f.name.slice(-3).toLowerCase()} (${f.source})\n🕥 ${(f.length/60).toFixed(0)} min   💾 ${sizeToString(f.size)}`,
                 subtitles: subtitles,
                 behaviorHints: {
                     notWebReady: f.name.slice(-3).toLowerCase() !== 'mp4', // mp4 is the only web-ready format
@@ -68,17 +73,17 @@ async function fetchStreams(id) {
                 }
             }))
         );
-        const maxSize = Math.max(...files.map(f => f.size || 0));
-        const maxSizeFile = files.find(f => f.size == maxSize);
-        const maxSizeFileRes = maxSizeFile.width || Math.max(...files.map(f => f.width || 0));
+        const maxSize = Math.max(...videoFiles.map(f => f.size || 0));
+        const maxSizeFile = videoFiles.find(f => f.size == maxSize);
+        const maxSizeFileRes = maxSizeFile.height || Math.max(...videoFiles.map(f => f.height || 0));
         const maxSizeFileType = maxSizeFile.name.slice(-3).toLowerCase();
         streams = streams.concat( // torrents
             files
             .filter(f => f.name.slice(-7)==='torrent')
             .map(f => ({
                 infoHash: f.btih, // BitTorrent info hash (probably)
-                name: `IA ${maxSizeFileRes!==0 ? maxSizeFileRes+'p' : ''} ${f.format}`,
-                description: `${film.fields.title}\n${f.name}\n🎬 ${maxSizeFileType} (archive torrent)\n🕥 ${(maxSizeFile.length/60).toFixed(0)} min   💾 ${sizeToString(maxSize)}`,
+                name: `Archive.org ${quality} ${maxSizeFileRes!==0 ? maxSizeFileRes+'p' : ''} ${f.format}`,
+                description: `${res.fields.title}\n${f.name}\n🎬 ${maxSizeFileType} (archive torrent)\n🕥 ${(maxSizeFile.length/60).toFixed(0)} min   💾 ${sizeToString(maxSize)}`,
                 subtitles: subtitles,
                 behaviorHints: { // use the largest file as reference
                     videoSize: maxSize,
