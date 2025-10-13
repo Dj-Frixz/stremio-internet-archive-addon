@@ -52,14 +52,19 @@ async function fetchStreams(id) {
         const id = res.fields.identifier;
         const metaResponse = await fetch(`https://archive.org/metadata/${id}/files`);
         const files = (await metaResponse.json())?.result || [];
+
         const subtitles = files
-            .filter(f => ACCEPTED_SUBTITLES.includes(f.name.slice(-3).toLowerCase()) && f.length < runtime*0.7)  // skip if it is too short and likely not the full movie
+            .filter(f => ACCEPTED_SUBTITLES.includes(f.name.slice(-3).toLowerCase()))
             .map(f => ({id: f.name, url: `https://archive.org/download/${id}/${f.name}`, lang:'en'})); // lang en by default
-        const videoFiles = files.filter(f => ACCEPTED_FILE_TYPES.includes(f.name.slice(-3).toLowerCase()));
+
+        // skip videos too short, likely not the full movie (require at least 70% of typical runtime)
+        const videoFiles = files.filter(f => ACCEPTED_FILE_TYPES.includes(f.name.slice(-3).toLowerCase()) && f.length > runtime*0.7);
+        
         if (videoFiles.length === 0) {
             console.log(` - ${id} has no acceptable video files, skipping`);
             continue;
         }
+
         const quality = (res.fields.title+videoFiles[0].name+(res.fields.description||'')).match(/(?:dvd|blu-?ray|bd|hd|web|nd-?rip)-?(?:rip|dl)?|remux/i)?.[0] || '';
         streams = streams.concat( // video files
             videoFiles.map(f => ({
