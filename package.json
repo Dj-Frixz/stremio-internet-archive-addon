@@ -24,7 +24,7 @@
   "main": "addon.js",
   "scripts": {
     "test": "npm start -- --launch",
-    "update": "git pull && git commit . && git push"
+    "update": "git push beamup main"
   },
   "dependencies": {
     "stremio-addon-sdk": "1.0.x"
