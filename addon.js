@@ -2,7 +2,7 @@ const { addonBuilder }  = require('stremio-addon-sdk');
 
 const builder = new addonBuilder({
     id: 'org.stremio.internet-archive',
-    version: '0.0.1',
+    version: '1.0.0',
     name: 'Internet Archive',
     description: 'See if a movie is available on Internet Archive and play it instantly, directly from Stremio.',
     catalogs: [], // { type: 'movie', id: 'ia', name: 'Internet Archive' }
@@ -63,7 +63,7 @@ async function fetchStreams(id) {
                 subtitles: subtitles,
                 behaviorHints: {
                     notWebReady: f.name.slice(-3).toLowerCase() !== 'mp4', // mp4 is the only web-ready format
-                    videoSize: f.size,
+                    videoSize: parseInt(f.size) || 0,
                     filename: f.name
                 }
             }))
@@ -90,6 +90,7 @@ async function fetchStreams(id) {
         counter = streams.length;
     }
     console.log(` -> Returning ${streams.length} streams`);
+    // console.log(streams); // used for debugging
     return { streams: streams }
 }
 
