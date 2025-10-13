@@ -1,11 +1,11 @@
 const { addonBuilder }  = require('stremio-addon-sdk');
+const pkg = require('./package');
 
 const builder = new addonBuilder({
     id: 'org.stremio.internet-archive',
-    transportUrl: 'https://2c2fdd5f9c5b-stremio-internet-archive-addon.baby-beamup.club/manifest.json',
-    version: '1.0.3',
+    version: pkg.version,
     name: 'Internet Archive',
-    description: 'See if a movie is available on Internet Archive and play it instantly, directly from Stremio.',
+    description: pkg.description,
     catalogs: [], // { type: 'movie', id: 'ia', name: 'Internet Archive' }
     resources: ['stream'],
     types: ['movie'],
