@@ -2,7 +2,7 @@ const { addonBuilder }  = require('stremio-addon-sdk');
 
 const builder = new addonBuilder({
     id: 'org.stremio.internet-archive',
-    version: '1.0.0',
+    version: '1.0.1',
     name: 'Internet Archive',
     description: 'See if a movie is available on Internet Archive and play it instantly, directly from Stremio.',
     catalogs: [], // { type: 'movie', id: 'ia', name: 'Internet Archive' }
