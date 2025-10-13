@@ -10,7 +10,7 @@
     "movies",
     "streaming"
   ],
-  "homepage": "https://github.com/Dj-Frixz/stremio-internet-archive-addon#readme",
+  "homepage": "https://2c2fdd5f9c5b-stremio-internet-archive-addon.baby-beamup.club/",
   "bugs": {
     "url": "https://github.com/Dj-Frixz/stremio-internet-archive-addon/issues"
   },
@@ -24,7 +24,7 @@
   "main": "addon.js",
   "scripts": {
     "test": "npm start -- --launch",
-    "update": "git pull && git commit . && git push && beamup"
+    "update": "git pull && git commit . && git push"
   },
   "dependencies": {
     "stremio-addon-sdk": "1.0.x"
