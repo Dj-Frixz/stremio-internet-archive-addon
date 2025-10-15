@@ -1,4 +1,4 @@
-const { addonBuilder }  = require('stremio-addon-sdk');
+const { addonBuilder } = require('stremio-addon-sdk');
 const { fetchMovieStreams, fetchSeriesStreams } = require('./handlers/stream');
 const pkg = require('./package');
 

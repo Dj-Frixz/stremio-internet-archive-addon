@@ -18,7 +18,10 @@ async function fetchMovieStreams(id) {
     }
     const title = film.name.toLowerCase() // lowercase to avoid known ia bug with "TO" in title
                            .replace(/^the /i,''); // i.e. include 'evil dead' for 'the evil dead'
-    const runtime = parseInt(film.runtime.slice(0,-4)) * 60; // typical runtime (in seconds)
+    const runtime = parseInt(film?.runtime?.slice(0,-4) || 0) * 60; // typical runtime (in seconds)
+    if (runtime === 0) {
+        console.warn("Error: can't get runtime, set to zero.")
+    }
     const director_surname = (film.director?.[0] || '').split(' ').slice(-1)[0];
     const year = film.year * 1; // cast to int
     const queryParts = [
