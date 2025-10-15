@@ -12,16 +12,16 @@ async function fetchMovieStreams(id) {
     if (!cinemetaResponse.ok) {
         return { streams: [] };
     }
-    const episode = (await cinemetaResponse.json())?.meta;
-    if (!episode) {
+    const film = (await cinemetaResponse.json())?.meta;
+    if (!film) {
         return { streams: [] };
     }
-    const runtime = parseInt(episode.runtime.slice(0,-4)) * 60; // typical runtime (in seconds)
-    const director_surname = (episode.director?.[0] || '').split(' ').slice(-1)[0];
-    const year = episode.year * 1; // cast to int
+    const runtime = parseInt(film.runtime.slice(0,-4)) * 60; // typical runtime (in seconds)
+    const director_surname = (film.director?.[0] || '').split(' ').slice(-1)[0];
+    const year = film.year * 1; // cast to int
     const queryParts = [
         `(${director_surname} OR ${year} OR ${year-1} OR ${year+1})`, // director's surname or year (±1)
-        `title:(${episode.name.toLowerCase()})`, // title (lowercase to avoid known ia bug with "TO" in title)
+        `title:(${film.name.toLowerCase()})`, // title (lowercase to avoid known ia bug with "TO" in title)
         '-title:trailer', // exclude trailers
         'mediatype:movies', // movies only
         'item_size:["300000000" TO "100000000000"]' // size between ~300MB and ~100GB
@@ -33,7 +33,7 @@ async function fetchMovieStreams(id) {
     }
     const iaData = await iaResponse.json();
     const results = iaData?.response?.body?.hits?.hits || [];
-    console.log(`Found ${results.length} results on IA for ${episode.name} (${imdbId})`);
+    console.log(`Found ${results.length} results on IA for ${film.name} (${imdbId})`);
     let streams = [];
     let counter = 0;
     for (const res of results) {
@@ -118,7 +118,7 @@ async function fetchSeriesStreams(id) {
     }
     const iaData = await iaResponse.json();
     const results = iaData?.response?.body?.hits?.hits || [];
-    console.log(`Found ${results.length} results on IA for ${series},${season}x${ep} (${imdbId})`);
+    console.log(`Found ${results.length} results on IA for ${series.name}, ${season}x${ep} (${imdbId})`);
     let streams = [];
     let counter = 0;
 
@@ -126,11 +126,11 @@ async function fetchSeriesStreams(id) {
         const id = res.fields.identifier;
         let regex;
         let noSeasons = file => false; // need it when archive includes all episodes in a single season (read below)
-        const wrongSeason = new RegExp(`(?:(?:^|\\W)s|season)\\D?0*(?!${season}(?:\\D|$))\\d+`,'i');
+        const wrongSeason = new RegExp(`(?:(?:^|[^a-z])s|season)\\D?0*(?!${season}(?:\\D|$))\\d+`,'i');
 
         if ((res.fields.title+id).match(wrongSeason)) continue; // wrong season, skip
         else if ((res.fields.title+id).match(/season|\Ws\d/i)) { // if archive includes one season only
-            regex = new RegExp(`(?:(?:^|\\W)ep?|episode)\\D?0*${ep}(?:\\D|$)`,'i'); // e.g. E05 or ep-5 or episode 5
+            regex = new RegExp(`(?:(?:^|[^a-z])ep?|episode)\\D?0*${ep}(?:\\D|$)`,'i'); // e.g. E05 or ep-5 or episode 5
         } else {
             regex = new RegExp(`s(?:eason)?\\D?0*${season}\\D*(?:ep?|episode)\\D?0*${ep}(?:\\D|$)`,'i'); // e.g. S01E05 or s1-e5
 
