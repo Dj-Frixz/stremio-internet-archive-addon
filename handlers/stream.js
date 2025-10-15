@@ -26,7 +26,8 @@ async function fetchMovieStreams(id) {
         'mediatype:movies', // movies only
         'item_size:["300000000" TO "100000000000"]' // size between ~300MB and ~100GB
     ];
-    const iaUrl = `https://archive.org/services/search/beta/page_production/?user_query=${encodeURIComponent(queryParts.join(' AND '))}&hits_per_page=${MAX_STREAMS}`;
+    const iaUrl = `https://archive.org/services/search/beta/page_production/?user_query=${encodeURIComponent(queryParts.join(' AND '))}&sort=week:desc&hits_per_page=${MAX_STREAMS}`;
+    console.log(iaUrl);
     const iaResponse = await fetch(iaUrl);
     if (!iaResponse.ok) {
         return { streams: [] };
