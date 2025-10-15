@@ -16,12 +16,14 @@ async function fetchMovieStreams(id) {
     if (!film) {
         return { streams: [] };
     }
+    const title = film.name.toLowerCase() // lowercase to avoid known ia bug with "TO" in title
+                           .replace(/^the /i,''); // i.e. include 'evil dead' for 'the evil dead'
     const runtime = parseInt(film.runtime.slice(0,-4)) * 60; // typical runtime (in seconds)
     const director_surname = (film.director?.[0] || '').split(' ').slice(-1)[0];
     const year = film.year * 1; // cast to int
     const queryParts = [
         `(${director_surname} OR ${year} OR ${year-1} OR ${year+1})`, // director's surname or year (±1)
-        `title:(${film.name.toLowerCase()})`, // title (lowercase to avoid known ia bug with "TO" in title)
+        `title:(${title})`,
         '-title:trailer', // exclude trailers
         'mediatype:movies', // movies only
         'item_size:["300000000" TO "100000000000"]' // size between ~300MB and ~100GB
